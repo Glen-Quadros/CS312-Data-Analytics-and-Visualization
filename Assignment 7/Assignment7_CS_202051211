@@ -1,0 +1,68 @@
+
+import pandas as pd
+import numpy as np
+from sklearn.model_selection import StratifiedShuffleSplit
+import seaborn as sns
+
+filepath="weight-height.csv"
+data=pd.read_csv(filepath)
+
+#Store the real mean in a separate variable
+mean = round(data['Height'].mean(),3)
+mean
+
+
+# Obtain simple random sample
+simpleRandomSample = data.sample(n=1000).sort_index()
+
+# Save the sample mean in a separate variable
+simpleRandomMean = round(simpleRandomSample['Height'].mean(),3)
+
+# View sampled data frame
+simpleRandomSample
+
+def systematicSampling(df, step):
+    
+    indexes = np.arange(0,len(df),step=step)
+    systematicSample = df.iloc[indexes]
+    return systematicSample
+    
+# Obtain a systematic sample and save it in a new variable
+systematicSample = systematicSampling(data, 10)
+
+# Save the sample mean in a separate variable
+systematicMean = round(systematicSample['Height'].mean(),2)
+
+# View sampled data frame
+systematicSample
+
+# Set the split criteria
+split = StratifiedShuffleSplit(n_splits=1, test_size=1000)
+print(split)
+
+# Perform data frame split
+for x, y in split.split(data, data['Gender']):
+    stratifiedRandomSample = data.iloc[y]
+
+# View sampled data frame
+
+stratifiedRandomSample_mean = round(stratifiedRandomSample['Height'].mean(),2)
+
+
+# Obtain the sample mean for each group
+stratifiedRandomSample.groupby("Gender").mean()
+
+stratifiedRandomSample
+
+# Create a dictionary with the mean outcomes for each sampling method and the real mean
+df = {'sample_mean':[stratifiedRandomSample,systematicMean,stratifiedRandomSample_mean],
+           'population_mean':mean}
+
+# Transform dictionary into a data frame
+df = pd.DataFrame(df, index=['Simple Random Sampling','Systematic Sampling','Stratified Sampling'])
+
+# Add a value corresponding to the absolute error
+df['absolute error'] = abs(df['population_mean'] - df['sample_mean'])
+
+# Sort data frame by absolute error
+df.sort_values(by='abs_error')
